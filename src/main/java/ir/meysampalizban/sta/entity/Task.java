@@ -60,7 +60,6 @@ public class Task {
         this.updatedAt = Instant.now();
     }
 
-    /** جایگزینی کامل زیروظایف — orphanRemoval بقیه را حذف می‌کند */
     public void replaceSubTasks(List<String> titles) {
         this.SubTasks.clear();
         int pos = 0;

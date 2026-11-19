@@ -18,8 +18,9 @@ services:
       retries: 10
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.40.16
     container_name: sta-ollama
+    pull_policy: never
     restart: unless-stopped
     ports:
       - "11434:11434"
@@ -32,7 +33,7 @@ services:
       retries: 10
 
   ollama-pull:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.40.16
     container_name: sta-ollama-pull
     depends_on:
       ollama:

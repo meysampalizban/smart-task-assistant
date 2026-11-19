@@ -41,29 +41,22 @@ public class TaskService {
         this.enrichmentService = enrichmentService;
     }
 
-    // ------------------------------------------------------------------ create
-    /**
-     * وظیفه را ابتدا ذخیره می‌کند، سپس تلاش می‌کند با AI غنی‌سازی کند.
-     * اگر AI شکست بخورد، وظیفه با مقادیر پیش‌فرض باقی می‌ماند (enriched=false).
-     */
     public TaskResponse create(CreateTaskRequest request) {
         Task task = new Task();
         task.setTitle(request.title().trim());
 
-        Task saved = repository.save(task);   // تراکنش کوتاه، بدون نگه‌داشتن اتصال در طول تماس AI
+        Task saved = repository.save(task);
 
         try {
             applySuggestion(saved, enrichmentService.suggest(saved.getTitle()));
             saved = repository.save(saved);
         } catch (Exception ex) {
             log.warn("AI enrichment failed for task {}: {}", saved.getId(), ex.toString());
-            // عمداً استثنا را پرتاب نمی‌کنیم — وظیفه کاربر نباید از دست برود
         }
 
         return toResponse(saved);
     }
 
-    // ------------------------------------------------------------------- read
     @Transactional(readOnly = true)
     public Page<TaskResponse> findAll(TaskStatus status,
                                       TaskPriority priority,
@@ -78,7 +71,7 @@ public class TaskService {
         return toResponse(load(id));
     }
 
-    // ----------------------------------------------------------------- update
+
     @Transactional
     public TaskResponse update(Long id, UpdateTaskRequest request) {
         Task task = load(id);
@@ -92,21 +85,16 @@ public class TaskService {
         if (request.priority() != null) {
             task.setPriority(request.priority());
         }
-        // dirty checking در پایان تراکنش، UPDATE را خودکار اجرا می‌کند
+
         return toResponse(task);
     }
 
-    // ----------------------------------------------------------------- delete
     @Transactional
     public void delete(Long id) {
         repository.delete(load(id));
     }
 
-    // ----------------------------------------------------------------- enrich
-    /**
-     * اجرای مجدد غنی‌سازی. برخلاف create، اینجا خطای AI به کاربر گزارش می‌شود
-     * چون کاربر آگاهانه این عملیات را درخواست کرده است.
-     */
+
     @Transactional
     public TaskResponse enrich(Long id) {
         Task task = load(id);
@@ -120,7 +108,7 @@ public class TaskService {
         return toResponse(task);
     }
 
-    // ---------------------------------------------------------------- helpers
+
     private Task load(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
