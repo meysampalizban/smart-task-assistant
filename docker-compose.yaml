@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: sta-postgres
+    environment:
+      POSTGRES_DB: sta
+      POSTGRES_USER: sta
+      POSTGRES_PASSWORD: sta
+    restart: always
+    ports:
+      - "5433:5432"
+    volumes:
+     - sta-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sta -d sta"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sta-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - sta-ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: sta-ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["ollama", "pull", "llama3.2"]
+    restart: "no"
+volumes:
+  sta-pgdata:
+  sta-ollama:
+  
